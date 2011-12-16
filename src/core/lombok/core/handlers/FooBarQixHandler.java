@@ -22,6 +22,7 @@
 package lombok.core.handlers;
 
 import static lombok.ast.AST.Arg;
+import static lombok.ast.AST.Block;
 import static lombok.ast.AST.Call;
 import static lombok.ast.AST.Equal;
 import static lombok.ast.AST.If;
@@ -30,15 +31,19 @@ import static lombok.ast.AST.MethodDecl;
 import static lombok.ast.AST.Modulo;
 import static lombok.ast.AST.Name;
 import static lombok.ast.AST.New;
+import static lombok.ast.AST.Number;
 import static lombok.ast.AST.Return;
 import static lombok.ast.AST.Type;
+import static lombok.ast.AST.While;
 import static lombok.core.util.ErrorMessages.canBeUsedOnClassOnly;
 import lombok.FooBarQix;
 import lombok.RequiredArgsConstructor;
 import lombok.ast.AST;
+import lombok.ast.Assignment;
 import lombok.ast.Expression;
 import lombok.ast.IMethod;
 import lombok.ast.IType;
+import lombok.ast.LocalDecl;
 import lombok.ast.Statement;
 import lombok.core.DiagnosticsReceiver;
 
@@ -47,6 +52,9 @@ public class FooBarQixHandler<TYPE_TYPE extends IType<? extends IMethod<TYPE_TYP
 	private static final String NUMBER_NAME = "number";
 	private static final String VALUE_NAME = "value";
 	private static final String RET_NAME = "ret";
+	private static final String LENGTH_NAME = "length";
+	private static final String INDEX_NAME = "i";
+	private static final String CHAR_NAME = "c";
 	private static final String CONVERT_METHOD_NAME = "convert";
 
 	private final TYPE_TYPE type;
@@ -64,23 +72,75 @@ public class FooBarQixHandler<TYPE_TYPE extends IType<? extends IMethod<TYPE_TYP
 	private void generateGetPropertySupportMethod(final TYPE_TYPE type) {
 		type.injectMethod(MethodDecl(Type(String.class), CONVERT_METHOD_NAME) //
 				.makePublic() //
-				.withArgument(Arg(Type(Integer.class), NUMBER_NAME)) //
-				.withStatement(LocalDecl(Type(String.class), VALUE_NAME).withInitialization( //
-						Call(Name(Integer.class), "toString").withArgument(Name(NUMBER_NAME)))) //
-				.withStatement(LocalDecl(Type(StringBuilder.class), RET_NAME).withInitialization( //
-						New(Type(StringBuilder.class)))) //
+				.withArgument(Arg(Type("int"), NUMBER_NAME)) //
+				.withStatement(numberDeclaration()) //
+				.withStatement(retDeclaration()) //
+				.withStatement(lengthDeclaration()) //
 				.withStatement(divisibleRule(3, "Foo")) //
 				.withStatement(divisibleRule(5, "Bar")) //
 				.withStatement(divisibleRule(7, "Qix")) //
-				.withStatement(Return(Call(Name(RET_NAME), "toString"))));
+				.withStatement(indexDeclaration()) //
+				.withStatement(digitRules()) //
+				.withStatement(returnRule()) //
+		);
+	}
+
+	private LocalDecl retDeclaration() {
+		return LocalDecl(Type(StringBuilder.class), RET_NAME).makeFinal().withInitialization( //
+				New(Type(StringBuilder.class)));
+	}
+
+	private LocalDecl numberDeclaration() {
+		return LocalDecl(Type(String.class), VALUE_NAME).makeFinal().withInitialization( //
+				Call(Name(Integer.class), "toString").withArgument(Name(NUMBER_NAME)));
+	}
+
+	private LocalDecl lengthDeclaration() {
+		return LocalDecl(Type("int"), LENGTH_NAME).withInitialization(Call(Name(VALUE_NAME), "length"));
+	}
+
+	private LocalDecl indexDeclaration() {
+		return LocalDecl(Type("int"), INDEX_NAME).withInitialization(Number(0));
 	}
 
 	private Statement<?> divisibleRule(int i, String value) {
-		return If(Equal(Modulo(Name(NUMBER_NAME), AST.Number(i)), AST.Number(0))) //
-				.Then(Call(Name(RET_NAME), "append").withArgument(AST.String(value))) //
-				.Else(Call(Name(RET_NAME), "append").withArgument(AST.String("")));
+		return If(Equal(Modulo(Name(NUMBER_NAME), Number(i)), Number(0))) //
+				.Then(Call(Name(RET_NAME), "append").withArgument(AST.String(value))); //
 	}
 
+	private LocalDecl charAtDeclaration() {
+		return LocalDecl(Type("char"), CHAR_NAME).makeFinal().withInitialization( //
+				Call(Name(VALUE_NAME), "charAt").withArgument(Name(INDEX_NAME)));
+	}
+
+	private Statement<?> digitRule(int i, String value) {
+		return If(Equal(Name(CHAR_NAME), caracter(i))) //
+				.Then(Call(Name(RET_NAME), "append").withArgument(AST.String(value))); //
+	}
+
+	private Expression<?> caracter(int i) {
+		return AST.Number('0' + i);
+//		return Call(Type(Character.class), "valueOf").withArgument(AST.String("" + i));
+	}
+
+	private Statement<?> digitRules() {
+		return While(AST.Lower(Name(INDEX_NAME), Name(LENGTH_NAME))).Do( //
+				Block().withStatement(charAtDeclaration()) //
+						.withStatement(digitRule(3, "Foo")) //
+						.withStatement(digitRule(5, "Bar")) //
+						.withStatement(digitRule(7, "Qix")) //
+						.withStatement(incrementIndex()));
+	}
+
+	private Assignment incrementIndex() {
+		return AST.Assign(Name(INDEX_NAME), AST.Add(AST.Name(INDEX_NAME), AST.Number(1)));
+	}
+
+	private Statement<?> returnRule() {
+		return If(Equal(Call(Name(RET_NAME), "length"), Number(0))) //
+				.Then(Return(Name(VALUE_NAME))) //
+				.Else(Return(Call(Name(RET_NAME), "toString")));
+	}
 	/**
 	 * 
 	 * <pre>

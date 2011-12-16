@@ -117,6 +117,14 @@ public final class AST {
 		return new Binary(left, "==", right);
 	}
 
+	public static Binary Lower(final Expression<?> left, final Expression<?> right) {
+		return new Binary(left, "<", right);
+	}
+
+	public static Binary Upper(final Expression<?> left, final Expression<?> right) {
+		return new Binary(left, ">", right);
+	}
+
 	public static Binary NotEqual(final Expression<?> left, final Expression<?> right) {
 		return new Binary(left, "!=", right);
 	}
