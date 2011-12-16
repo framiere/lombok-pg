@@ -149,6 +149,7 @@ the common tasks and can be called on to run the main aspects of all the sub-scr
 		</jar>
 		<copy file="dist/lombok-pg-${lombok.version}.jar" tofile="dist/lombok-pg.jar" />
 
+		<!--
 		<jar destfile="dist/lombok-pg-${lombok.version}-runtime.jar">
 			<fileset dir="build/lombok-pg">
 				<include name="*lombok/Actions*.class" />
@@ -162,7 +163,6 @@ the common tasks and can be called on to run the main aspects of all the sub-scr
 				<attribute name="Lombok-Version" value="${lombok.version}" />
 			</manifest>
 		</jar>
-
 		<jar destfile="dist/lombok-pg-${lombok.version}-sources.jar">
 			<fileset dir="src/core" />
 			<fileset dir="src/eclipse" />
@@ -179,7 +179,7 @@ the common tasks and can be called on to run the main aspects of all the sub-scr
 			<fileset dir="." includes="LICENSE" />
 			<fileset dir="." includes="AUTHORS" />
 		</jar>
-
+-->
 		<property name="lombok.dist.built" value="true" />
 	</target>
 
