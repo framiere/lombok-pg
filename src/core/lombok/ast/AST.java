@@ -109,6 +109,10 @@ public final class AST {
 		return new EnumConstant(name);
 	}
 
+	public static Binary Modulo(final Expression<?> left, final Expression<?> right) {
+		return new Binary(left, "%", right);
+	}
+
 	public static Binary Equal(final Expression<?> left, final Expression<?> right) {
 		return new Binary(left, "==", right);
 	}
